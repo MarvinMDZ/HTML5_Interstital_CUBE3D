@@ -35,42 +35,6 @@ function removeAd() {
     window.parent.postMessage(JSON.stringify(message), "*");
 }
 
-function getAdID() {
-    if (EB._isLocalMode) {
-        return null;
-    }
-    else {
-        return EB._adConfig.adId;
-    }
-}
-
-function onMessageReceived(event) {
-    try {
-        var messageData = JSON.parse(event.data);
-
-        if (messageData.adId && messageData.adId === getAdID()) {
-            if (messageData.type && messageData.type === "resize") {
-                if (isAndroid2) {
-                    forceResizeOnAndroid2();
-                }
-            }
-        }
-    }
-    catch (error) {
-        EBG.log.debug(error);
-    }
-}
-
-function forceResizeOnAndroid2() {
-    document.body.style.opacity = 0.99;
-    clearTimeout(android2ResizeTimeout);
-    android2ResizeTimeout = setTimeout(function() {
-        document.body.style.opacity = 1;
-        document.body.style.height = window.innerHeight;
-        document.body.style.width = window.innerWidth;
-    }, 200);
-}
-
 function preventPageScrolling() {
     document.addEventListener("touchmove", stopScrolling);
 }
@@ -79,6 +43,5 @@ function stopScrolling(event) {
     event.preventDefault();
 }
 
-window.addEventListener("message", onMessageReceived);
 window.addEventListener("load", initEB);
 ///////////////////////////////////////////////////////////////////

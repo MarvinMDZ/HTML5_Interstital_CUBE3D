@@ -49,6 +49,7 @@ button:focus{
             user-select: none;
     -webkit-tap-highlight-color: rgba(0,0,0,0);
     outline: none;
+    cursor: pointer;
 }
 #closeButton{
 	position: absolute;
@@ -69,9 +70,11 @@ button:focus{
 	background-color: white;
 	-webkit-transform-style: preserve-3d;
 	        transform-style: preserve-3d;
-	-webkit-transform: scale(.75) rotateY(0deg) translateZ(0px);
-	        transform: scale(.75) rotateY(0deg) translateZ(0px); 
-
+	-webkit-transform: scale(.65) rotateY(0deg) translateZ(0px);
+	        transform: scale(.65) rotateY(0deg) translateZ(0px);
+	-webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+	cursor: pointer;
 }
 .side{
   display: block;

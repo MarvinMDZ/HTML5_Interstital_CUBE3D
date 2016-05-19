@@ -1,7 +1,5 @@
 var autoCollapseTimeout;
-var isAndroid2 = (/android 2/i).test(navigator.userAgent);
-var android2ResizeTimeout;
-
+var ad;
 var cubeDiv,intervaloGiro;
 var initPosX = 0;
 var currentRotation = 0;
@@ -41,16 +39,16 @@ function initializeCustomVariables() {
 
 function addEventListeners() {
 	if (adConfig.cancelAutoCollapseOnUserInteraction) {
-		var ad = document.getElementById("ad");
+		ad = document.getElementById("ad");
 		ad.addEventListener("mousedown", cancelAutoCollapse);
 		ad.addEventListener("touchstart", cancelAutoCollapse);
 	}
 	if (is_touch_device() && adConfig.isDraggable) {
-		cubeDiv.addEventListener("touchstart",onTouchStartedDraggable);
+		ad.addEventListener("touchstart",onTouchStartedDraggable);
 	}else if(is_touch_device()){
-		cubeDiv.addEventListener("touchstart",onTouchStarted);
+		ad.addEventListener("touchstart",onTouchStarted);
 	}else{
-		cubeDiv.addEventListener("mousedown",onMouseDown);
+		ad.addEventListener("mousedown",onMouseDown);
 	}
 }
 
@@ -89,53 +87,62 @@ function collapse(event) {
 	removeAd();
 }
 function onTouchStartedDraggable(e){
+	clearInterval(intervaloGiro);
 	initPosX = e.changedTouches[0].clientX;
 	initRotation = currentRotation;
-	cubeDiv.addEventListener('touchmove',onTouchMoveDraggable);
-	cubeDiv.addEventListener('touchend',onTouchEndedDraggable);
+	ad.addEventListener('touchmove',onTouchMoveDraggable);
+	ad.addEventListener('touchend',onTouchEndedDraggable);
 }
 function onTouchMoveDraggable(e){
 	setSpinSpeed(0);
 	degree = Math.round(currentRotation+(e.changedTouches[0].clientX-initPosX)*90/480);
 
-    cubeDiv.style.webkitTransform = "scale(0.75) rotateY("+degree+"deg) translateZ(0px)";
-	cubeDiv.style.transform = "scale(0.75) rotateY("+degree+"deg) translateZ(0px)";
+    cubeDiv.style.webkitTransform = "scale(0.65) rotateY("+degree+"deg) translateZ(0px)";
+	cubeDiv.style.transform = "scale(0.65) rotateY("+degree+"deg) translateZ(0px)";
 }
 function onTouchEndedDraggable(e){
 	var diff = 0;
 	clearInterval(intervaloGiro);
 	degree = Math.round(currentRotation+(e.changedTouches[0].clientX-initPosX)*90/480);
-	
-	if(degree>initRotation){
-		while(degree%90!=0){
-			degree++;
-			diff++;
-		}
-		if(diff<0){
-			degree+=90;
-		}
-		EB.userActionCounter("Drag User Cube Left");
+	if(degree%90 < 10 && degree%90 > -10){
+		console.log("CLICKED",degree%90);
+		EB.clickthrough();
+		cubeDiv.style.webkitTransform = "scale(0.65) rotateY("+currentRotation+"deg) translateZ(0px)";
+		cubeDiv.style.transform = "scale(0.65) rotateY("+currentRotation+"deg) translateZ(0px)";
 	}else{
-		while(degree%90!=0){
-			degree--;
-			diff--;
+		if(degree>initRotation){
+			while(degree%90!=0){
+				degree++;
+				diff++;
+			}
+			if(diff<0){
+				degree+=90;
+			}
+			EB.userActionCounter("Drag User Cube Left");
+		}else{
+			while(degree%90!=0){
+				degree--;
+				diff--;
+			}
+			if(diff>0){
+				degree-=90;
+			}
+			EB.userActionCounter("Drag User Cube Right");
 		}
-		if(diff>0){
-			degree-=90;
-		}
-		EB.userActionCounter("Drag User Cube Right");
-	}
-	var speed = Math.abs(diff)/90;
-	
-	setSpinSpeed(speed);
+		var speed = Math.abs(diff)/90;
+		
+		setSpinSpeed(speed);
 
-	cubeDiv.style.webkitTransform = "scale(0.75) rotateY("+degree+"deg) translateZ(0px)";
-	cubeDiv.style.transform = "scale(0.75) rotateY("+degree+"deg) translateZ(0px)";
+		cubeDiv.style.webkitTransform = "scale(0.65) rotateY("+degree+"deg) translateZ(0px)";
+		cubeDiv.style.transform = "scale(0.65) rotateY("+degree+"deg) translateZ(0px)";
+		
+		currentRotation = degree;
+
+	}
 	
-	currentRotation = degree;
-	cubeDiv.removeEventListener('touchmove',onTouchMoveDraggable);
-	cubeDiv.removeEventListener('touchend',onTouchEndedDraggable);
-	cubeDiv.removeEventListener('touchcanceled',onTouchEndedDraggable);
+	ad.removeEventListener('touchmove',onTouchMoveDraggable);
+	ad.removeEventListener('touchend',onTouchEndedDraggable);
+	ad.removeEventListener('touchcanceled',onTouchEndedDraggable);
 
 	setTimeout(function(){
 		autoSpin();
@@ -160,7 +167,8 @@ function onTouchEnded(e){
 		EB.userActionCounter("Touch User Cube Right");
 	}else{
 		//If the touch movement is not enough
-		//EB.clickthrough();
+		console.log("CLICKED");
+		EB.clickthrough();
 	}
 	cubeDiv.removeEventListener('touchend',onTouchEnded);
 	setTimeout(function(){
@@ -169,7 +177,8 @@ function onTouchEnded(e){
 }
 function onMouseDown(e){
 	initPosX = e.clientX;
-	cubeDiv.addEventListener('mouseout',onMouseOut);
+	ad.addEventListener('mouseout',onMouseOut);
+	ad.addEventListener('mouseup',onMouseOut);
 }
 function onMouseOut(e){
 	clearInterval(intervaloGiro);
@@ -183,9 +192,11 @@ function onMouseOut(e){
 		EB.userActionCounter("Desktop User Cube Right");
 	}else{
 		//If the touch movement is not enough
-		//EB.clickthrough();
+		console.log("CLICKED");
+		EB.clickthrough();
 	}
-	cubeDiv.removeEventListener('mouseout',onMouseOut);
+	ad.removeEventListener('mouseup',onMouseOut);
+	ad.removeEventListener('mouseout',onMouseOut);
 	setTimeout(function(){
 		autoSpin();
 	},1000);
@@ -205,8 +216,8 @@ function applySpin(degrees){
 	}else{
 		currentRotation -= 90;
 	}
-	cubeDiv.style.webkitTransform = "scale(0.75) rotateY("+currentRotation+"deg) translateZ(0px)";
-	cubeDiv.style.transform = "scale(0.75) rotateY("+currentRotation+"deg) translateZ(0px)";
+	cubeDiv.style.webkitTransform = "scale(0.65) rotateY("+currentRotation+"deg) translateZ(0px)";
+	cubeDiv.style.transform = "scale(0.65) rotateY("+currentRotation+"deg) translateZ(0px)";
 }
 
 function setSpinSpeed(seconds){
